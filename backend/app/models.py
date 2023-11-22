@@ -26,11 +26,11 @@ class Expense(db.Model):
     category = db.Column(db.String)
     date = db.Column(db.Date)
 
-    def __init__(self, amount, date, description=None, category=None):
+    def __init__(self, amount, description=None, category=None, date=None):
         self.amount = amount
-        self.date = date
         self.description = description
         self.category = category
+        self.date = date
 
     def __repr__(self):
         return f"<Expense(id={self.id}, amount={self.amount}, description={self.description}, category={self.category}, date={self.date})>"
