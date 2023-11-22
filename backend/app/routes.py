@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from app import app, db
 from app.models import User, Expense
-from app.forms import LoginForm
+from app.forms import LoginForm, RegistrationForm
 from flask_login import login_user, logout_user, current_user, login_required
 
 # User routes
@@ -10,24 +10,22 @@ from flask_login import login_user, logout_user, current_user, login_required
 @app.route('/api/users', methods=['GET'])
 def get_all_users():
     users = User.query.all()
-    users_data = [{'id': user.id, 'username': user.username,
-                   'password_hash': user.password_hash} for user in users]
+    users_data = [{'id': user.id, 'username': user.username} for user in users]
     return jsonify(users_data)
 
 
-@app.route('api/users/<int:id>', methods=['GET'])
+@app.route('/api/users/<int:id>', methods=['GET'])
 def get_user_by_id(id):
     user = User.query.get(id)
 
     if not user:
         return jsonify({'message': 'User not found'}), 404
 
-    user_data = {'id': user.id, 'username': user.username,
-                 'password_hash': user.password_hash}
+    user_data = {'id': user.id, 'username': user.username}
     return jsonify(user_data)
 
 
-@app.route('api/users', methods=['POST'])
+@app.route('/api/users', methods=['POST'])
 def add_user():
     data = request.get_json()
     username = data.get("username")
@@ -41,7 +39,7 @@ def add_user():
     return jsonify({'message': 'User added successfully'})
 
 
-@app.route('api/users/<int:id>', methods=['PUT'])
+@app.route('/api/users/<int:id>', methods=['PUT'])
 def update_user(id):
     user = User.query.get(id)
 
@@ -59,12 +57,11 @@ def update_user(id):
 
     db.session.commit()
 
-    updated_user_data = {
-        'id': user.id, 'username': user.username, 'password_hash': user.password_hash}
+    updated_user_data = {'id': user.id, 'username': user.username}
     return jsonify({'message': 'User updated successfully', 'user': updated_user_data})
 
 
-@app.route('api/users/<int:id>', methods=['DELETE'])
+@app.route('/api/users/<int:id>', methods=['DELETE'])
 def delete_user(id):
     user = User.query.get(id)
 
@@ -79,7 +76,7 @@ def delete_user(id):
 # Expense routes
 
 
-@app.route('api/expenses', methods=['GET'])
+@app.route('/api/expenses', methods=['GET'])
 @login_required
 def get_all_expenses():
     expenses = Expense.query.all()
@@ -88,7 +85,7 @@ def get_all_expenses():
     return jsonify(expenses_data)
 
 
-@app.route('api/expenses/<int:id>', methods=['GET'])
+@app.route('/api/expenses/<int:id>', methods=['GET'])
 @login_required
 def get_expense_by_id(id):
     expense = Expense.query.get(id)
@@ -97,7 +94,7 @@ def get_expense_by_id(id):
     return jsonify(expense_data)
 
 
-@app.route('api/expenses', methods=['POST'])
+@app.route('/api/expenses', methods=['POST'])
 @login_required
 def add_expense():
     data = request.get_json()
@@ -115,7 +112,7 @@ def add_expense():
     return jsonify({'message': 'Expense added successfully'})
 
 
-@app.route('api/expenses/<int:id>', methods=['PUT'])
+@app.route('/api/expenses/<int:id>', methods=['PUT'])
 @login_required
 def update_expense(id):
     expense = Expense.query.get(id)
@@ -146,7 +143,7 @@ def update_expense(id):
     return jsonify({'message': 'Expense updated successfully', 'user': updated_expense_data})
 
 
-@app.route('api/expenses/<int:id>', methods=["DELETE"])
+@app.route('/api/expenses/<int:id>', methods=["DELETE"])
 @login_required
 def delete_expense(id):
     expense = Expense.query.get(id)
@@ -160,10 +157,10 @@ def delete_expense(id):
     return jsonify({'message': 'Expense deleted successfully'})
 
 
-# Login routes/views
+# Login / Registration routes
 
 
-@app.routes('api/login', methods=['POST'])
+@app.routes('/api/login', methods=['POST'])
 def login():
     form = LoginForm(request.get_json())
 
@@ -182,3 +179,20 @@ def login():
 def logout():
     logout_user()
     return jsonify({'message': 'Logout successful'}), 200
+
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    form = RegistrationForm(request.get_json())
+
+    if form.validate_on_submit():
+        if User.query.filter_by(username=form.username.data).first():
+            return jsonify({'message': 'Username already exists. Choose another one'}), 400
+
+        new_user = User(form.username.data, form.password.data)
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return jsonify({'message': 'Registration successful'}), 201
+    return jsonify({'message': "Registration unsuccessful. Please check your input"}), 400
