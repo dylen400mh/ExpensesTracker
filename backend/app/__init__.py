@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 
 # create flask application instance
 app = Flask(__name__)
@@ -9,6 +10,9 @@ app.config.from_pyfile("config.py")
 
 # initialize SQLAlchemy
 db = SQLAlchemy(app)
+
+# create login manager
+login_manager = LoginManager(app)
 
 # import routes
 from app import routes
