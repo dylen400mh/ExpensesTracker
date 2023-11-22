@@ -1,6 +1,8 @@
 from flask import jsonify, request
 from app import app, db
 from app.models import User, Expense
+from app.forms import LoginForm
+from flask_login import login_user, logout_user, current_user, login_required
 
 # User routes
 
@@ -78,6 +80,7 @@ def delete_user(id):
 
 
 @app.route('api/expenses', methods=['GET'])
+@login_required
 def get_all_expenses():
     expenses = Expense.query.all()
     expenses_data = [{'id': expense.id, 'amount': expense.amount, 'description': expense.description,
@@ -86,6 +89,7 @@ def get_all_expenses():
 
 
 @app.route('api/expenses/<int:id>', methods=['GET'])
+@login_required
 def get_expense_by_id(id):
     expense = Expense.query.get(id)
     expense_data = {'id': expense.id, 'amount': expense.amount, 'description': expense.description,
@@ -94,6 +98,7 @@ def get_expense_by_id(id):
 
 
 @app.route('api/expenses', methods=['POST'])
+@login_required
 def add_expense():
     data = request.get_json()
 
@@ -111,6 +116,7 @@ def add_expense():
 
 
 @app.route('api/expenses/<int:id>', methods=['PUT'])
+@login_required
 def update_expense(id):
     expense = Expense.query.get(id)
 
@@ -141,6 +147,7 @@ def update_expense(id):
 
 
 @app.route('api/expenses/<int:id>', methods=["DELETE"])
+@login_required
 def delete_expense(id):
     expense = Expense.query.get(id)
 
@@ -151,3 +158,27 @@ def delete_expense(id):
     db.session.commit()
 
     return jsonify({'message': 'Expense deleted successfully'})
+
+
+# Login routes/views
+
+
+@app.routes('api/login', methods=['POST'])
+def login():
+    form = LoginForm(request.get_json())
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+
+        if user and user.check_password(form.password.data):
+            login_user(user)
+            return jsonify({'message': 'Login successful'}), 200
+
+    return jsonify({'message': 'Login unsuccessful. Please check your credentials'}), 401
+
+
+@app.route('/api/logout')
+@login_required
+def logout():
+    logout_user()
+    return jsonify({'message': 'Logout successful'}), 200
