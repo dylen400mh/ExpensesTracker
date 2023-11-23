@@ -160,7 +160,7 @@ def delete_expense(id):
 # Login / Registration routes
 
 
-@app.routes('/api/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     form = LoginForm(request.get_json())
 
