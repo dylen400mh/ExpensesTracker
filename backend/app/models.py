@@ -18,7 +18,7 @@ class User(db.Model, UserMixin):
         return pbkdf2_sha256.verify(password, self.password_hash)
     
     def __repr__(self):
-        return f"<User(id={self.id}, username={self.username}, password_hash={self.password_hash})>"
+        return f"<User(id={self.id}, username={self.username})>"
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
