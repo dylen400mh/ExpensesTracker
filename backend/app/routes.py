@@ -1,8 +1,7 @@
 from flask import jsonify, request
 from app import app, db
 from app.models import User, Expense
-from app.forms import LoginForm, RegistrationForm
-from flask_login import login_user, logout_user, current_user, login_required
+from flask_login import login_user, logout_user, login_required
 
 # User routes
 
@@ -16,7 +15,7 @@ def get_all_users():
 
 @app.route('/api/users/<int:id>', methods=['GET'])
 def get_user_by_id(id):
-    user = User.query.get(id)
+    user = db.session.get(User, id)
 
     if not user:
         return jsonify({'message': 'User not found'}), 404
@@ -27,7 +26,7 @@ def get_user_by_id(id):
 
 @app.route('/api/users', methods=['POST'])
 def add_user():
-    data = request.get_json()
+    data = request.json
     username = data.get("username")
     password = data.get("password")
 
@@ -41,12 +40,12 @@ def add_user():
 
 @app.route('/api/users/<int:id>', methods=['PUT'])
 def update_user(id):
-    user = User.query.get(id)
+    user = db.session.get(User, id)
 
     if not user:
         return jsonify({'message': 'User not found'}), 404
 
-    data = request.get_json()
+    data = request.json
 
     # update user details provided in request
     if 'username' in data:
@@ -63,7 +62,7 @@ def update_user(id):
 
 @app.route('/api/users/<int:id>', methods=['DELETE'])
 def delete_user(id):
-    user = User.query.get(id)
+    user = db.session.get(User, id)
 
     if not user:
         return jsonify({'message': 'User not found'}), 404
@@ -88,7 +87,7 @@ def get_all_expenses():
 @app.route('/api/expenses/<int:id>', methods=['GET'])
 @login_required
 def get_expense_by_id(id):
-    expense = Expense.query.get(id)
+    expense = db.session.get(Expense, id)
     expense_data = {'id': expense.id, 'amount': expense.amount, 'description': expense.description,
                     'category': expense.category, 'date': expense.date}
     return jsonify(expense_data)
@@ -97,7 +96,7 @@ def get_expense_by_id(id):
 @app.route('/api/expenses', methods=['POST'])
 @login_required
 def add_expense():
-    data = request.get_json()
+    data = request.json
 
     amount = data.get('amount')
     description = data.get('description')
@@ -115,12 +114,12 @@ def add_expense():
 @app.route('/api/expenses/<int:id>', methods=['PUT'])
 @login_required
 def update_expense(id):
-    expense = Expense.query.get(id)
+    expense = db.session.get(Expense, id)
 
     if not expense:
         return jsonify({'message': 'Expense not found'}), 404
 
-    data = request.get_json()
+    data = request.json
 
     # update expense based on data received
     if 'amount' in data:
@@ -146,7 +145,7 @@ def update_expense(id):
 @app.route('/api/expenses/<int:id>', methods=["DELETE"])
 @login_required
 def delete_expense(id):
-    expense = Expense.query.get(id)
+    expense = db.session.get(Expense, id)
 
     if not expense:
         return jsonify({'message': 'Expense not found'}), 404
@@ -162,19 +161,19 @@ def delete_expense(id):
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    form = LoginForm(request.get_json())
+    data = request.json
 
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+    username = data['username']
+    password = data['password']
 
-        if user and user.check_password(form.password.data):
-            login_user(user)
-            return jsonify({'message': 'Login successful'}), 200
+    user = User.query.filter_by(username=username).first()
 
-    return jsonify({'message': 'Login unsuccessful. Please check your credentials'}), 401
+    if user and user.check_password(password):
+        login_user(user)
+        return jsonify({'message': 'Login successful'}), 200
 
 
-@app.route('/api/logout')
+@app.route('/api/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
@@ -183,16 +182,17 @@ def logout():
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    form = RegistrationForm(request.get_json())
+    data = request.json
 
-    if form.validate_on_submit():
-        if User.query.filter_by(username=form.username.data).first():
-            return jsonify({'message': 'Username already exists. Choose another one'}), 400
+    username = data['username']
+    password = data['password']
 
-        new_user = User(form.username.data, form.password.data)
+    if User.query.filter_by(username=username).first():
+        return jsonify({'message': 'Username already exists. Choose another one'}), 400
 
-        db.session.add(new_user)
-        db.session.commit()
+    new_user = User(username, password)
 
-        return jsonify({'message': 'Registration successful'}), 201
-    return jsonify({'message': "Registration unsuccessful. Please check your input"}), 400
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': 'Registration successful'}), 201
