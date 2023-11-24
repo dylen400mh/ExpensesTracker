@@ -1,5 +1,4 @@
 from app.models import User, Expense
-from datetime import date
 
 
 def test_create_user():
@@ -31,16 +30,16 @@ def test_user_repr():
 
 
 def test_create_expense():
-    expense = Expense(100, 'test expense', 'Food', date(2023, 11, 23))
+    expense = Expense(100, 'test expense', 'Food', '2023-11-23')
 
     assert expense.amount == 100
     assert expense.description == 'test expense'
     assert expense.category == 'Food'
-    assert expense.date == date(2023, 11, 23)
+    assert expense.date == '2023-11-23'
 
 
 def test_expense_repr():
-    expense = Expense(100, 'test expense', 'Food', date(2023, 11, 23))
+    expense = Expense(100, 'test expense', 'Food', '2023-11-23')
 
     assert expense.__repr__(
     ) == f"<Expense(id={expense.id}, amount=100, description=test expense, category=Food, date=2023-11-23)>"

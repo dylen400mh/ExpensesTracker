@@ -29,7 +29,7 @@ class Expense(db.Model):
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String)
     category = db.Column(db.String)
-    date = db.Column(db.Date)
+    date = db.Column(db.String)
 
     def __init__(self, amount, description=None, category=None, date=None):
         self.amount = amount
