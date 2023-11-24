@@ -6,7 +6,7 @@ DEBUG = True  # Set to False in production
 SECRET_KEY = secrets.token_hex(16)  # Generate a secure random value
 
 # SQLAlchemy configuration
-SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///example.db')
+SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # CORS configuration (if needed)
